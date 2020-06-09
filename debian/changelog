@@ -1,3 +1,9 @@
+libnftnl (1.1.2-2pexip1) pexip; urgency=medium
+
+  * Prepare Pexip packaging
+
+ -- Vincent Sanders <vince@pexip.com>  Tue, 09 Jun 2020 09:47:20 +0100
+
 libnftnl (1.1.2-2) unstable; urgency=medium
 
   * [e3e8611] d/tests: remove tests
