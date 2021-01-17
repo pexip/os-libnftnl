@@ -1,3 +1,93 @@
+libnftnl (1.1.9-1) unstable; urgency=medium
+
+  [ Hamid Nassiby ]
+  * [ccf2445] Added static library to the libnftnl-dev package.
+
+  [ Arturo Borrero Gonzalez ]
+  * [bcc40f2] New upstream version 1.1.9
+  * [39aeffe] src:libnftnl: bump std-version to 4.5.1
+  * [8da86f7] d/libnftnl11.symbols: refresh file
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Sun, 17 Jan 2021 18:08:35 +0100
+
+libnftnl (1.1.8-2) unstable; urgency=medium
+
+  * [a3ae88d] libnftnl-dev-doc: mark as Multi-Arch: foreing
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Mon, 09 Nov 2020 11:05:38 +0100
+
+libnftnl (1.1.8-1) unstable; urgency=medium
+
+  * [7dc0554] d/upstream/signing-key.asc: refresh
+  * [936cfde] New upstream version 1.1.8
+  * [033211f] d/libnftnl11.symbols: refresh file
+  * [318c446] src:libnftnl: bump debhelper compat to 13
+  * [ef834fa] libnftnl-doc: introduce new binary package with doxygen-generated
+    documentation (Closes: #965351)
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Wed, 28 Oct 2020 11:46:08 +0100
+
+libnftnl (1.1.7-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * [9f0c902] Update standards version to 4.5.0, no changes needed.
+
+  [ Arturo Borrero Gonzalez ]
+  * [03f8510] New upstream version 1.1.7
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Mon, 08 Jun 2020 10:39:35 +0200
+
+libnftnl (1.1.6-1) unstable; urgency=medium
+
+  [ Debian Janitor ]
+  * [f8e75d3] Set debhelper-compat version in Build-Depends.
+  * [6994545] Re-export upstream signing key without extra signatures.
+  * [547a557] debian/copyright: use spaces rather than tabs to start
+    continuation lines.
+  * [29e9f22] Drop unnecessary dependency on dh-autoreconf.
+  * [1c08200] Use canonical URL in Vcs-Git.
+
+  [ Arturo Borrero Gonzalez ]
+  * [d8c9625] New upstream version 1.1.6
+  * [ac276d3] d/patches: drop 0001-test-flowtable-size-check.patch
+  * [cad91b6] d/libnftnl11.symbols: refresh file
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Thu, 02 Apr 2020 12:14:39 +0200
+
+libnftnl (1.1.5-1) unstable; urgency=medium
+
+  * This release was packaged and uploaded to Debian while on a 300km/h train.
+    Hope it works :-)
+  * [ab950a9] d/control: bump std-version to 4.4.1
+  * [4087171] New upstream version 1.1.5 (Closes: #934078)
+  * [d1a00d5] d/patches: add 0001-test-flowtable-size-check.patch
+  * [364a1c4] src:libnftnl: update symbols file for 1.1.5-1
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Tue, 03 Dec 2019 13:03:30 +0100
+
+libnftnl (1.1.4-1) unstable; urgency=medium
+
+  * [c327c9c] New upstream version 1.1.4
+  * [5ff0c1e] src:libnftnl: bump debhelper compat to 12
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Mon, 26 Aug 2019 12:32:30 +0200
+
+libnftnl (1.1.3-2) unstable; urgency=medium
+
+  * [221bda5] d/control: bump std-version to 4.4.0
+  * [32db9dc] d/rules: drop dbgsym migration override
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Tue, 09 Jul 2019 14:26:48 +0200
+
+libnftnl (1.1.3-1~exp1) experimental; urgency=medium
+
+  * [2b4b69f] src:libnftnl: add salsa CI integration
+  * [504e47e] New upstream version 1.1.3
+  * [ee18350] d/libnftnl11.symbols: refresh file with latest changes from
+    upstream
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Tue, 28 May 2019 11:32:46 +0200
+
 libnftnl (1.1.2-2) unstable; urgency=medium
 
   * [e3e8611] d/tests: remove tests

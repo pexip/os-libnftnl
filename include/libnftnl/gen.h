@@ -25,7 +25,7 @@ enum {
 
 bool nftnl_gen_is_set(const struct nftnl_gen *gen, uint16_t attr);
 void nftnl_gen_unset(struct nftnl_gen *gen, uint16_t attr);
-int nftnl_gen_set(struct nftnl_gen *gen, uint16_t attr, const void *data);
+int nftnl_gen_set(struct nftnl_gen *gen, uint16_t attr, const void *data) __attribute__((deprecated));
 int nftnl_gen_set_data(struct nftnl_gen *gen, uint16_t attr,
 		       const void *data, uint32_t data_len);
 const void *nftnl_gen_get(const struct nftnl_gen *gen, uint16_t attr);
@@ -42,7 +42,6 @@ int nftnl_gen_snprintf(char *buf, size_t size, const struct nftnl_gen *gen, uint
 int nftnl_gen_fprintf(FILE *fp, const struct nftnl_gen *gen, uint32_t type, uint32_t flags);
 
 #define nftnl_gen_nlmsg_build_hdr	nftnl_nlmsg_build_hdr
-int nftnl_gen_nlmsg_parse(const struct nlmsghdr *nlh, struct nftnl_gen *gen);
 
 #ifdef __cplusplus
 } /* extern "C" */

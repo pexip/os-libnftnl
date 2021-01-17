@@ -65,6 +65,8 @@ int main(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else if (strcmp(argv[1], "bridge") == 0)
 		family = NFPROTO_BRIDGE;
 	else if (strcmp(argv[1], "arp") == 0)
@@ -72,7 +74,7 @@ int main(int argc, char *argv[])
 	else if (strcmp(argv[1], "unspec") == 0)
 		family = NFPROTO_UNSPEC;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6, bridge, arp, unspec\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet, bridge, arp, unspec\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -89,13 +91,13 @@ int main(int argc, char *argv[])
 		nlh = nftnl_nlmsg_build_hdr(buf, NFT_MSG_GETOBJ, family,
 					    NLM_F_DUMP, seq);
 		if (argc == 3) {
-			nftnl_obj_set(t, NFTNL_OBJ_TABLE, argv[2]);
+			nftnl_obj_set_str(t, NFTNL_OBJ_TABLE, argv[2]);
 			nftnl_obj_nlmsg_build_payload(nlh, t);
 			nftnl_obj_free(t);
 		}
 	} else {
-		nftnl_obj_set(t, NFTNL_OBJ_TABLE, argv[2]);
-		nftnl_obj_set(t, NFTNL_OBJ_NAME, argv[3]);
+		nftnl_obj_set_str(t, NFTNL_OBJ_TABLE, argv[2]);
+		nftnl_obj_set_str(t, NFTNL_OBJ_NAME, argv[3]);
 		nftnl_obj_set_u32(t, NFTNL_OBJ_TYPE, NFT_OBJECT_COUNTER);
 
 		nlh = nftnl_nlmsg_build_hdr(buf, NFT_MSG_GETOBJ, family,

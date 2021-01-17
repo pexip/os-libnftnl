@@ -29,6 +29,9 @@ enum nftnl_set_attr {
 	NFTNL_SET_USERDATA,
 	NFTNL_SET_OBJ_TYPE,
 	NFTNL_SET_HANDLE,
+	NFTNL_SET_DESC_CONCAT,
+	NFTNL_SET_EXPR,
+	NFTNL_SET_EXPRESSIONS,
 	__NFTNL_SET_MAX
 };
 #define NFTNL_SET_MAX (__NFTNL_SET_MAX - 1)
@@ -42,7 +45,7 @@ struct nftnl_set *nftnl_set_clone(const struct nftnl_set *set);
 
 bool nftnl_set_is_set(const struct nftnl_set *s, uint16_t attr);
 void nftnl_set_unset(struct nftnl_set *s, uint16_t attr);
-int nftnl_set_set(struct nftnl_set *s, uint16_t attr, const void *data);
+int nftnl_set_set(struct nftnl_set *s, uint16_t attr, const void *data) __attribute__((deprecated));
 int nftnl_set_set_data(struct nftnl_set *s, uint16_t attr, const void *data,
 		       uint32_t data_len);
 void nftnl_set_set_u32(struct nftnl_set *s, uint16_t attr, uint32_t val);
@@ -75,6 +78,14 @@ void nftnl_set_list_add(struct nftnl_set *s, struct nftnl_set_list *list);
 void nftnl_set_list_add_tail(struct nftnl_set *s, struct nftnl_set_list *list);
 void nftnl_set_list_del(struct nftnl_set *s);
 int nftnl_set_list_foreach(struct nftnl_set_list *set_list, int (*cb)(struct nftnl_set *t, void *data), void *data);
+struct nftnl_set *nftnl_set_list_lookup_byname(struct nftnl_set_list *set_list,
+					       const char *set);
+
+struct nftnl_expr;
+void nftnl_set_add_expr(struct nftnl_set *s, struct nftnl_expr *expr);
+int nftnl_set_expr_foreach(const struct nftnl_set *s,
+			   int (*cb)(struct nftnl_expr *e, void *data),
+			   void *data);
 
 struct nftnl_set_list_iter;
 struct nftnl_set_list_iter *nftnl_set_list_iter_create(const struct nftnl_set_list *l);
@@ -102,7 +113,11 @@ enum {
 	NFTNL_SET_ELEM_USERDATA,
 	NFTNL_SET_ELEM_EXPR,
 	NFTNL_SET_ELEM_OBJREF,
+	NFTNL_SET_ELEM_KEY_END,
+	NFTNL_SET_ELEM_EXPRESSIONS,
+	__NFTNL_SET_ELEM_MAX
 };
+#define NFTNL_SET_ELEM_MAX (__NFTNL_SET_ELEM_MAX - 1)
 
 struct nftnl_set_elem;
 
@@ -135,7 +150,13 @@ int nftnl_set_elem_parse(struct nftnl_set_elem *e, enum nftnl_parse_type type,
 int nftnl_set_elem_parse_file(struct nftnl_set_elem *e, enum nftnl_parse_type type,
 			    FILE *fp, struct nftnl_parse_err *err);
 int nftnl_set_elem_snprintf(char *buf, size_t size, const struct nftnl_set_elem *s, uint32_t type, uint32_t flags);
-int nftnl_set_elem_fprintf(FILE *fp, struct nftnl_set_elem *se, uint32_t type, uint32_t flags);
+int nftnl_set_elem_fprintf(FILE *fp, const struct nftnl_set_elem *se, uint32_t type, uint32_t flags);
+
+struct nftnl_expr;
+void nftnl_set_elem_add_expr(struct nftnl_set_elem *e, struct nftnl_expr *expr);
+int nftnl_set_elem_expr_foreach(struct nftnl_set_elem *e,
+				int (*cb)(struct nftnl_expr *e, void *data),
+				void *data);
 
 int nftnl_set_elem_foreach(struct nftnl_set *s, int (*cb)(struct nftnl_set_elem *e, void *data), void *data);
 

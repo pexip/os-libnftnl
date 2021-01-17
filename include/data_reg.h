@@ -13,14 +13,19 @@ enum {
 	DATA_CHAIN,
 };
 
+enum {
+	DATA_F_NOPFX = 1 << 0,
+};
+
 union nftnl_data_reg {
 	struct {
 		uint32_t	val[NFT_DATA_VALUE_MAXLEN / sizeof(uint32_t)];
 		uint32_t	len;
 	};
 	struct {
-		int		verdict;
+		uint32_t	verdict;
 		const char	*chain;
+		uint32_t	chain_id;
 	};
 };
 

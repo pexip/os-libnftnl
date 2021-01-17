@@ -31,12 +31,14 @@ static struct nftnl_obj *obj_add_parse(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else if (strcmp(argv[1], "bridge") == 0)
 		family = NFPROTO_BRIDGE;
 	else if (strcmp(argv[1], "arp") == 0)
 		family = NFPROTO_ARP;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6, bridge, arp\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet, bridge, arp\n");
 		return NULL;
 	}
 
@@ -71,7 +73,8 @@ static struct nftnl_obj *obj_add_parse(int argc, char *argv[])
 	nftnl_obj_set_str(t, NFTNL_OBJ_NAME, argv[3]);
 	nftnl_obj_set_u8(t, NFTNL_OBJ_CT_TIMEOUT_L4PROTO, l4proto);
 	nftnl_obj_set_u16(t, NFTNL_OBJ_CT_TIMEOUT_L3PROTO, NFPROTO_IPV4);
-	nftnl_obj_set(t, NFTNL_OBJ_CT_TIMEOUT_ARRAY, timeout);
+	nftnl_obj_set_data(t, NFTNL_OBJ_CT_TIMEOUT_ARRAY,
+			   timeout, timeout_array_size);
 	return t;
 
 }
