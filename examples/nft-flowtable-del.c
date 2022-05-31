@@ -19,8 +19,8 @@ static struct nftnl_flowtable *flowtable_del_parse(int argc, char *argv[])
 		return NULL;
 	}
 
-	nftnl_flowtable_set(t, NFTNL_FLOWTABLE_TABLE, argv[2]);
-	nftnl_flowtable_set(t, NFTNL_FLOWTABLE_NAME, argv[3]);
+	nftnl_flowtable_set_str(t, NFTNL_FLOWTABLE_TABLE, argv[2]);
+	nftnl_flowtable_set_str(t, NFTNL_FLOWTABLE_NAME, argv[3]);
 
 	return t;
 }
@@ -45,12 +45,14 @@ int main(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else if (strcmp(argv[1], "bridge") == 0)
 		family = NFPROTO_BRIDGE;
 	else if (strcmp(argv[1], "arp") == 0)
 		family = NFPROTO_ARP;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6, bridge, arp\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet, bridge, arp\n");
 		exit(EXIT_FAILURE);
 	}
 

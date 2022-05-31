@@ -1,14 +1,11 @@
 /*
- * (C) 2012 by Pablo Neira Ayuso <pablo@netfilter.org>
+ * (C) 2019 by Stéphane Veyret <sveyret@gmail.com>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
- * This software has been sponsored by Sophos Astaro <http://www.sophos.com>
  */
-
 
 #include <stdlib.h>
 #include <time.h>
@@ -21,11 +18,47 @@
 #include <libmnl/libmnl.h>
 #include <libnftnl/object.h>
 
-static int obj_cb(const struct nlmsghdr *nlh, void *data)
+static uint16_t parse_family(char *str, const char *option)
+{
+	if (strcmp(str, "ip") == 0)
+		return NFPROTO_IPV4;
+	else if (strcmp(str, "ip6") == 0)
+		return NFPROTO_IPV6;
+	else if (strcmp(str, "inet") == 0)
+		return NFPROTO_INET;
+	else if (strcmp(str, "arp") == 0)
+		return NFPROTO_INET;
+	fprintf(stderr, "Unknown %s: ip, ip6, inet, arp\n", option);
+	exit(EXIT_FAILURE);
+}
+
+static struct nftnl_obj *obj_parse(int argc, char *argv[])
 {
 	struct nftnl_obj *t;
-	char buf[4096];
+	uint16_t family;
+
+	t = nftnl_obj_alloc();
+	if (t == NULL) {
+		perror("OOM");
+		return NULL;
+	}
+
+	family = parse_family(argv[1], "family");
+	nftnl_obj_set_u32(t, NFTNL_OBJ_FAMILY, family);
+	nftnl_obj_set_u32(t, NFTNL_OBJ_TYPE, NFT_OBJECT_CT_EXPECT);
+	nftnl_obj_set_str(t, NFTNL_OBJ_TABLE, argv[2]);
+
+	if (argc > 3)
+		nftnl_obj_set_str(t, NFTNL_OBJ_NAME, argv[3]);
+
+	return t;
+}
+
+static int obj_cb(const struct nlmsghdr *nlh, void *data)
+{
 	uint32_t *type = data;
+	struct nftnl_obj *t;
+	char buf[4096];
 
 	t = nftnl_obj_alloc();
 	if (t == NULL) {
@@ -53,55 +86,27 @@ int main(int argc, char *argv[])
 	char buf[MNL_SOCKET_BUFFER_SIZE];
 	struct nlmsghdr *nlh;
 	uint32_t portid, seq, family;
-	struct nftnl_obj *t = NULL;
+	struct nftnl_obj *t;
 	int ret;
 	uint32_t type = NFTNL_OUTPUT_DEFAULT;
+	uint16_t flags = NLM_F_ACK;
 
-	if (argc < 3 || argc > 5) {
-		fprintf(stderr, "%s <family> <table> [<obj>]\n", argv[0]);
+	if (argc < 3 || argc > 4) {
+		fprintf(stderr, "%s <family> <table> [<name>]\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 
-	if (strcmp(argv[1], "ip") == 0)
-		family = NFPROTO_IPV4;
-	else if (strcmp(argv[1], "ip6") == 0)
-		family = NFPROTO_IPV6;
-	else if (strcmp(argv[1], "inet") == 0)
-		family = NFPROTO_INET;
-	else if (strcmp(argv[1], "unspec") == 0)
-		family = NFPROTO_UNSPEC;
-	else {
-		fprintf(stderr, "Unknown family: ip, ip6, inet, unspec");
+	t = obj_parse(argc, argv);
+	if (t == NULL)
 		exit(EXIT_FAILURE);
-	}
-
-	if (argc == 3 || argc == 4) {
-		t = nftnl_obj_alloc();
-		if (t == NULL) {
-			perror("OOM");
-			exit(EXIT_FAILURE);
-		}
-	}
+	family = nftnl_obj_get_u32(t, NFTNL_OBJ_FAMILY);
 
 	seq = time(NULL);
-	nftnl_obj_set_u32(t, NFTNL_OBJ_TYPE, NFT_OBJECT_CT_TIMEOUT);
-	if (argc < 4) {
-		nlh = nftnl_nlmsg_build_hdr(buf, NFT_MSG_GETOBJ, family,
-					    NLM_F_DUMP, seq);
-		if (argc == 3) {
-			nftnl_obj_set_str(t, NFTNL_OBJ_TABLE, argv[2]);
-			nftnl_obj_nlmsg_build_payload(nlh, t);
-			nftnl_obj_free(t);
-		}
-	} else {
-		nftnl_obj_set_str(t, NFTNL_OBJ_TABLE, argv[2]);
-		nftnl_obj_set_str(t, NFTNL_OBJ_NAME, argv[3]);
-
-		nlh = nftnl_nlmsg_build_hdr(buf, NFT_MSG_GETOBJ, family,
-					    NLM_F_ACK, seq);
-		nftnl_obj_nlmsg_build_payload(nlh, t);
-		nftnl_obj_free(t);
-	}
+	if (argc < 4)
+		flags = NLM_F_DUMP;
+	nlh = nftnl_nlmsg_build_hdr(buf, NFT_MSG_GETOBJ, family, flags, seq);
+	nftnl_obj_nlmsg_build_payload(nlh, t);
+	nftnl_obj_free(t);
 
 	nl = mnl_socket_open(NETLINK_NETFILTER);
 	if (nl == NULL) {

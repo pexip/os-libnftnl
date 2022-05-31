@@ -56,6 +56,7 @@ libnftnl_la_SOURCES = utils.c		\
 		      expr/redir.c	\
 		      expr/hash.c	\
 		      expr/socket.c	\
+		      expr/synproxy.c	\
 		      expr/osf.c	\
 		      expr/xfrm.c	\
 		      obj/counter.c	\
@@ -63,6 +64,8 @@ libnftnl_la_SOURCES = utils.c		\
 		      obj/quota.c	\
 		      obj/tunnel.c	\
 		      obj/limit.c	\
+		      obj/synproxy.c	\
 		      obj/ct_timeout.c 	\
 		      obj/secmark.c	\
+		      obj/ct_expect.c 	\
 		      libnftnl.map

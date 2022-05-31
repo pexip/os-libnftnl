@@ -23,13 +23,14 @@ enum nftnl_table_attr {
 	NFTNL_TABLE_FLAGS,
 	NFTNL_TABLE_USE,
 	NFTNL_TABLE_HANDLE,
+	NFTNL_TABLE_USERDATA,
 	__NFTNL_TABLE_MAX
 };
 #define NFTNL_TABLE_MAX (__NFTNL_TABLE_MAX - 1)
 
 bool nftnl_table_is_set(const struct nftnl_table *t, uint16_t attr);
 void nftnl_table_unset(struct nftnl_table *t, uint16_t attr);
-void nftnl_table_set(struct nftnl_table *t, uint16_t attr, const void *data);
+void nftnl_table_set(struct nftnl_table *t, uint16_t attr, const void *data) __attribute__((deprecated));
 int nftnl_table_set_data(struct nftnl_table *t, uint16_t attr,
 			 const void *data, uint32_t data_len);
 const void *nftnl_table_get(const struct nftnl_table *t, uint16_t attr);

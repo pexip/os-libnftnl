@@ -93,8 +93,8 @@ static struct nftnl_rule *setup_rule(uint8_t family, const char *table,
 		exit(EXIT_FAILURE);
 	}
 
-	nftnl_rule_set(r, NFTNL_RULE_TABLE, table);
-	nftnl_rule_set(r, NFTNL_RULE_CHAIN, chain);
+	nftnl_rule_set_str(r, NFTNL_RULE_TABLE, table);
+	nftnl_rule_set_str(r, NFTNL_RULE_CHAIN, chain);
 	nftnl_rule_set_u32(r, NFTNL_RULE_FAMILY, family);
 
 	if (handle != NULL) {
@@ -137,8 +137,10 @@ int main(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet\n");
 		exit(EXIT_FAILURE);
 	}
 

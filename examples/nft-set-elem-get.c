@@ -70,19 +70,21 @@ int main(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else if (strcmp(argv[1], "bridge") == 0)
 		family = NFPROTO_BRIDGE;
 	else if (strcmp(argv[1], "arp") == 0)
 		family = NFPROTO_ARP;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6, bridge, arp\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet, bridge, arp\n");
 		exit(EXIT_FAILURE);
 	}
 
 	nlh = nftnl_set_nlmsg_build_hdr(buf, NFT_MSG_GETSETELEM, family,
 					NLM_F_DUMP|NLM_F_ACK, seq);
-	nftnl_set_set(t, NFTNL_SET_NAME, argv[3]);
-	nftnl_set_set(t, NFTNL_SET_TABLE, argv[2]);
+	nftnl_set_set_str(t, NFTNL_SET_NAME, argv[3]);
+	nftnl_set_set_str(t, NFTNL_SET_TABLE, argv[2]);
 	nftnl_set_elems_nlmsg_build_payload(nlh, t);
 	nftnl_set_free(t);
 

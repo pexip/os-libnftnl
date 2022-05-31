@@ -1,12 +1,10 @@
 /*
- * (C) 2012 by Pablo Neira Ayuso <pablo@netfilter.org>
+ * (C) 2019 by Stéphane Veyret <sveyret@gmail.com>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- *
- * This software has been sponsored by Sophos Astaro <http://www.sophos.com>
  */
 
 #include <stdlib.h>
@@ -29,7 +27,21 @@
 #include <libnftnl/rule.h>
 #include <libnftnl/expr.h>
 
-static void add_ct_timeout(struct nftnl_rule *r, const char *obj_name)
+static uint16_t parse_family(char *str, const char *option)
+{
+	if (strcmp(str, "ip") == 0)
+		return NFPROTO_IPV4;
+	else if (strcmp(str, "ip6") == 0)
+		return NFPROTO_IPV6;
+	else if (strcmp(str, "inet") == 0)
+		return NFPROTO_INET;
+	else if (strcmp(str, "arp") == 0)
+		return NFPROTO_INET;
+	fprintf(stderr, "Unknown %s: ip, ip6, inet, arp\n", option);
+	exit(EXIT_FAILURE);
+}
+
+static void add_ct_expect(struct nftnl_rule *r, const char *obj_name)
 {
 	struct nftnl_expr *e;
 
@@ -39,13 +51,14 @@ static void add_ct_timeout(struct nftnl_rule *r, const char *obj_name)
 		exit(EXIT_FAILURE);
 	}
 	nftnl_expr_set_str(e, NFTNL_EXPR_OBJREF_IMM_NAME, obj_name);
-	nftnl_expr_set_u32(e, NFTNL_EXPR_OBJREF_IMM_TYPE, NFT_OBJECT_CT_TIMEOUT);
+	nftnl_expr_set_u32(e, NFTNL_EXPR_OBJREF_IMM_TYPE, NFT_OBJECT_CT_EXPECT);
 
 	nftnl_rule_add_expr(r, e);
 }
 
 static struct nftnl_rule *setup_rule(uint8_t family, const char *table,
-				   const char *chain, const char *handle, const char *obj_name)
+				     const char *chain, const char *handle,
+				     const char *obj_name)
 {
 	struct nftnl_rule *r = NULL;
 	uint64_t handle_num;
@@ -65,38 +78,31 @@ static struct nftnl_rule *setup_rule(uint8_t family, const char *table,
 		nftnl_rule_set_u64(r, NFTNL_RULE_POSITION, handle_num);
 	}
 
-	add_ct_timeout(r, obj_name);
+	add_ct_expect(r, obj_name);
 
 	return r;
 }
 
 int main(int argc, char *argv[])
 {
+	char buf[MNL_SOCKET_BUFFER_SIZE];
+	struct mnl_nlmsg_batch *batch;
+	uint32_t seq = time(NULL);
 	struct mnl_socket *nl;
 	struct nftnl_rule *r;
 	struct nlmsghdr *nlh;
-	struct mnl_nlmsg_batch *batch;
 	uint8_t family;
-	char buf[MNL_SOCKET_BUFFER_SIZE];
-	uint32_t seq = time(NULL);
 	int ret;
 
 	if (argc < 5 || argc > 6) {
-		fprintf(stderr, "Usage: %s <family> <table> <chain> <name>\n", argv[0]);
+		fprintf(stderr,
+			"Usage: %s <family> <table> <chain> [<handle>] <name>\n",
+			argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	if (strcmp(argv[1], "ip") == 0)
-		family = NFPROTO_IPV4;
-	else if (strcmp(argv[1], "ip6") == 0)
-		family = NFPROTO_IPV6;
-	else if (strcmp(argv[1], "inet") == 0)
-		family = NFPROTO_INET;
-	else {
-		fprintf(stderr, "Unknown family: ip, ip6, inet\n");
-		exit(EXIT_FAILURE);
-	}
+	family = parse_family(argv[1], "family");
 
-	if (argc != 6)
+	if (argc < 6)
 		r = setup_rule(family, argv[2], argv[3], NULL, argv[4]);
 	else
 		r = setup_rule(family, argv[2], argv[3], argv[4], argv[5]);
@@ -118,9 +124,10 @@ int main(int argc, char *argv[])
 	mnl_nlmsg_batch_next(batch);
 
 	nlh = nftnl_rule_nlmsg_build_hdr(mnl_nlmsg_batch_current(batch),
-			NFT_MSG_NEWRULE,
-			nftnl_rule_get_u32(r, NFTNL_RULE_FAMILY),
-			NLM_F_APPEND|NLM_F_CREATE|NLM_F_ACK, seq++);
+					 NFT_MSG_NEWRULE,
+					 nftnl_rule_get_u32(r, NFTNL_RULE_FAMILY),
+					 NLM_F_APPEND|NLM_F_CREATE|NLM_F_ACK,
+					 seq++);
 
 	nftnl_rule_nlmsg_build_payload(nlh, r);
 	nftnl_rule_free(r);

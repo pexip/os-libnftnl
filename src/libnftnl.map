@@ -169,7 +169,7 @@ global:
   nftnl_set_elem_parse;
   nftnl_set_elem_parse_file;
   nftnl_set_elem_snprintf;
-  nftnl_set_elem_fprinf;
+  nftnl_set_elem_fprintf;
 
   nftnl_set_elems_nlmsg_build_payload;
   nftnl_set_elems_nlmsg_parse;
@@ -214,14 +214,14 @@ global:
 
   nftnl_gen_alloc;
   nftnl_gen_free;
-  nftnl_gen_attr_is_set;
-  nftnl_gen_attr_unset;
-  nftnl_gen_attr_set_data;
-  nftnl_gen_attr_set;
-  nftnl_gen_attr_set_u32;
-  nftnl_gen_attr_get_data;
-  nftnl_gen_attr_get;
-  nftnl_gen_attr_get_u32;
+  nftnl_gen_is_set;
+  nftnl_gen_unset;
+  nftnl_gen_set_data;
+  nftnl_gen_set;
+  nftnl_gen_set_u32;
+  nftnl_gen_get_data;
+  nftnl_gen_get;
+  nftnl_gen_get_u32;
   nftnl_gen_nlmsg_parse;
   nftnl_gen_snprintf;
   nftnl_gen_fprintf;
@@ -314,10 +314,12 @@ global:
   nftnl_flowtable_set_u32;
   nftnl_flowtable_set_s32;
   nftnl_flowtable_set_str;
+  nftnl_flowtable_set_u64;
   nftnl_flowtable_get;
   nftnl_flowtable_get_u32;
   nftnl_flowtable_get_s32;
   nftnl_flowtable_get_str;
+  nftnl_flowtable_get_u64;
   nftnl_flowtable_parse;
   nftnl_flowtable_parse_file;
   nftnl_flowtable_snprintf;
@@ -336,3 +338,48 @@ global:
 
 local: *;
 };
+
+LIBNFTNL_12 {
+  nftnl_chain_rule_add;
+  nftnl_chain_rule_add_tail;
+  nftnl_chain_rule_del;
+  nftnl_chain_rule_insert_at;
+  nftnl_chain_rule_append_at;
+  nftnl_rule_foreach;
+  nftnl_rule_iter_create;
+  nftnl_rule_iter_next;
+  nftnl_rule_iter_destroy;
+
+  nftnl_chain_list_lookup_byname;
+  nftnl_rule_lookup_byindex;
+} LIBNFTNL_11;
+
+LIBNFTNL_13 {
+  nftnl_set_list_lookup_byname;
+  nftnl_obj_set_data;
+  nftnl_flowtable_set_data;
+} LIBNFTNL_12;
+
+LIBNFTNL_14 {
+  nftnl_udata_nest_start;
+  nftnl_udata_nest_end;
+  nftnl_chain_set_array;
+  nftnl_chain_get_array;
+  nftnl_flowtable_set_array;
+  nftnl_flowtable_get_array;
+} LIBNFTNL_13;
+
+LIBNFTNL_15 {
+  nftnl_obj_get_data;
+  nftnl_expr_build_payload;
+  nftnl_rule_del_expr;
+} LIBNFTNL_14;
+
+LIBNFTNL_16 {
+  nftnl_set_add_expr;
+  nftnl_set_expr_foreach;
+  nftnl_set_elem_add_expr;
+  nftnl_set_elem_expr_foreach;
+  nftnl_expr_add_expr;
+  nftnl_expr_expr_foreach;
+} LIBNFTNL_15;
