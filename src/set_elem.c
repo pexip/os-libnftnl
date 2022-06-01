@@ -36,17 +36,21 @@ struct nftnl_set_elem *nftnl_set_elem_alloc(void)
 	if (s == NULL)
 		return NULL;
 
+	INIT_LIST_HEAD(&s->expr_list);
+
 	return s;
 }
 
 EXPORT_SYMBOL(nftnl_set_elem_free);
 void nftnl_set_elem_free(struct nftnl_set_elem *s)
 {
+	struct nftnl_expr *e, *tmp;
+
 	if (s->flags & (1 << NFTNL_SET_ELEM_CHAIN))
 		xfree(s->data.chain);
 
-	if (s->flags & (1 << NFTNL_SET_ELEM_EXPR))
-		nftnl_expr_free(s->expr);
+	list_for_each_entry_safe(e, tmp, &s->expr_list, head)
+		nftnl_expr_free(e);
 
 	if (s->flags & (1 << NFTNL_SET_ELEM_USERDATA))
 		xfree(s->user.data);
@@ -66,6 +70,8 @@ bool nftnl_set_elem_is_set(const struct nftnl_set_elem *s, uint16_t attr)
 EXPORT_SYMBOL(nftnl_set_elem_unset);
 void nftnl_set_elem_unset(struct nftnl_set_elem *s, uint16_t attr)
 {
+	struct nftnl_expr *expr, *tmp;
+
 	if (!(s->flags & (1 << attr)))
 		return;
 
@@ -75,6 +81,7 @@ void nftnl_set_elem_unset(struct nftnl_set_elem *s, uint16_t attr)
 		break;
 	case NFTNL_SET_ELEM_FLAGS:
 	case NFTNL_SET_ELEM_KEY:	/* NFTA_SET_ELEM_KEY */
+	case NFTNL_SET_ELEM_KEY_END:	/* NFTA_SET_ELEM_KEY_END */
 	case NFTNL_SET_ELEM_VERDICT:	/* NFTA_SET_ELEM_DATA */
 	case NFTNL_SET_ELEM_DATA:	/* NFTA_SET_ELEM_DATA */
 	case NFTNL_SET_ELEM_TIMEOUT:	/* NFTA_SET_ELEM_TIMEOUT */
@@ -84,7 +91,9 @@ void nftnl_set_elem_unset(struct nftnl_set_elem *s, uint16_t attr)
 		xfree(s->user.data);
 		break;
 	case NFTNL_SET_ELEM_EXPR:
-		nftnl_expr_free(s->expr);
+	case NFTNL_SET_ELEM_EXPRESSIONS:
+		list_for_each_entry_safe(expr, tmp, &s->expr_list, head)
+			nftnl_expr_free(expr);
 		break;
 	case NFTNL_SET_ELEM_OBJREF:
 		xfree(s->objref);
@@ -96,10 +105,22 @@ void nftnl_set_elem_unset(struct nftnl_set_elem *s, uint16_t attr)
 	s->flags &= ~(1 << attr);
 }
 
+static uint32_t nftnl_set_elem_validate[NFTNL_SET_ELEM_MAX + 1] = {
+	[NFTNL_SET_ELEM_FLAGS]		= sizeof(uint32_t),
+	[NFTNL_SET_ELEM_VERDICT]	= sizeof(uint32_t),
+	[NFTNL_SET_ELEM_TIMEOUT]	= sizeof(uint64_t),
+	[NFTNL_SET_ELEM_EXPIRATION]	= sizeof(uint64_t),
+};
+
 EXPORT_SYMBOL(nftnl_set_elem_set);
 int nftnl_set_elem_set(struct nftnl_set_elem *s, uint16_t attr,
 		       const void *data, uint32_t data_len)
 {
+	struct nftnl_expr *expr, *tmp;
+
+	nftnl_assert_attr_exists(attr, NFTNL_SET_ELEM_MAX);
+	nftnl_assert_validate(data, nftnl_set_elem_validate, attr, data_len);
+
 	switch(attr) {
 	case NFTNL_SET_ELEM_FLAGS:
 		memcpy(&s->set_elem_flags, data, sizeof(s->set_elem_flags));
@@ -107,6 +128,10 @@ int nftnl_set_elem_set(struct nftnl_set_elem *s, uint16_t attr,
 	case NFTNL_SET_ELEM_KEY:	/* NFTA_SET_ELEM_KEY */
 		memcpy(&s->key.val, data, data_len);
 		s->key.len = data_len;
+		break;
+	case NFTNL_SET_ELEM_KEY_END:	/* NFTA_SET_ELEM_KEY_END */
+		memcpy(&s->key_end.val, data, data_len);
+		s->key_end.len = data_len;
 		break;
 	case NFTNL_SET_ELEM_VERDICT:	/* NFTA_SET_ELEM_DATA */
 		memcpy(&s->data.verdict, data, sizeof(s->data.verdict));
@@ -126,6 +151,9 @@ int nftnl_set_elem_set(struct nftnl_set_elem *s, uint16_t attr,
 	case NFTNL_SET_ELEM_TIMEOUT:	/* NFTA_SET_ELEM_TIMEOUT */
 		memcpy(&s->timeout, data, sizeof(s->timeout));
 		break;
+	case NFTNL_SET_ELEM_EXPIRATION:	/* NFTA_SET_ELEM_EXPIRATION */
+		memcpy(&s->expiration, data, sizeof(s->expiration));
+		break;
 	case NFTNL_SET_ELEM_USERDATA: /* NFTA_SET_ELEM_USERDATA */
 		if (s->flags & (1 << NFTNL_SET_ELEM_USERDATA))
 			xfree(s->user.data);
@@ -144,9 +172,16 @@ int nftnl_set_elem_set(struct nftnl_set_elem *s, uint16_t attr,
 		if (!s->objref)
 			return -1;
 		break;
+	case NFTNL_SET_ELEM_EXPR:
+		list_for_each_entry_safe(expr, tmp, &s->expr_list, head)
+			nftnl_expr_free(expr);
+
+		expr = (void *)data;
+		list_add(&expr->head, &s->expr_list);
+		break;
 	}
 	s->flags |= (1 << attr);
-	return -1;
+	return 0;
 }
 
 EXPORT_SYMBOL(nftnl_set_elem_set_u32);
@@ -170,6 +205,8 @@ int nftnl_set_elem_set_str(struct nftnl_set_elem *s, uint16_t attr, const char *
 EXPORT_SYMBOL(nftnl_set_elem_get);
 const void *nftnl_set_elem_get(struct nftnl_set_elem *s, uint16_t attr, uint32_t *data_len)
 {
+	struct nftnl_expr *expr;
+
 	if (!(s->flags & (1 << attr)))
 		return NULL;
 
@@ -180,6 +217,9 @@ const void *nftnl_set_elem_get(struct nftnl_set_elem *s, uint16_t attr, uint32_t
 	case NFTNL_SET_ELEM_KEY:	/* NFTA_SET_ELEM_KEY */
 		*data_len = s->key.len;
 		return &s->key.val;
+	case NFTNL_SET_ELEM_KEY_END:	/* NFTA_SET_ELEM_KEY_END */
+		*data_len = s->key_end.len;
+		return &s->key_end.val;
 	case NFTNL_SET_ELEM_VERDICT:	/* NFTA_SET_ELEM_DATA */
 		*data_len = sizeof(s->data.verdict);
 		return &s->data.verdict;
@@ -199,7 +239,9 @@ const void *nftnl_set_elem_get(struct nftnl_set_elem *s, uint16_t attr, uint32_t
 		*data_len = s->user.len;
 		return s->user.data;
 	case NFTNL_SET_ELEM_EXPR:
-		return s->expr;
+		list_for_each_entry(expr, &s->expr_list, head)
+			break;
+		return expr;
 	case NFTNL_SET_ELEM_OBJREF:
 		*data_len = strlen(s->objref) + 1;
 		return s->objref;
@@ -261,15 +303,28 @@ err:
 void nftnl_set_elem_nlmsg_build_payload(struct nlmsghdr *nlh,
 				      struct nftnl_set_elem *e)
 {
+	struct nftnl_expr *expr;
+	int num_exprs = 0;
+
 	if (e->flags & (1 << NFTNL_SET_ELEM_FLAGS))
 		mnl_attr_put_u32(nlh, NFTA_SET_ELEM_FLAGS, htonl(e->set_elem_flags));
 	if (e->flags & (1 << NFTNL_SET_ELEM_TIMEOUT))
 		mnl_attr_put_u64(nlh, NFTA_SET_ELEM_TIMEOUT, htobe64(e->timeout));
+	if (e->flags & (1 << NFTNL_SET_ELEM_EXPIRATION))
+		mnl_attr_put_u64(nlh, NFTA_SET_ELEM_EXPIRATION, htobe64(e->expiration));
 	if (e->flags & (1 << NFTNL_SET_ELEM_KEY)) {
 		struct nlattr *nest1;
 
 		nest1 = mnl_attr_nest_start(nlh, NFTA_SET_ELEM_KEY);
 		mnl_attr_put(nlh, NFTA_DATA_VALUE, e->key.len, e->key.val);
+		mnl_attr_nest_end(nlh, nest1);
+	}
+	if (e->flags & (1 << NFTNL_SET_ELEM_KEY_END)) {
+		struct nlattr *nest1;
+
+		nest1 = mnl_attr_nest_start(nlh, NFTA_SET_ELEM_KEY_END);
+		mnl_attr_put(nlh, NFTA_DATA_VALUE, e->key_end.len,
+			     e->key_end.val);
 		mnl_attr_nest_end(nlh, nest1);
 	}
 	if (e->flags & (1 << NFTNL_SET_ELEM_VERDICT)) {
@@ -295,6 +350,31 @@ void nftnl_set_elem_nlmsg_build_payload(struct nlmsghdr *nlh,
 		mnl_attr_put(nlh, NFTA_SET_ELEM_USERDATA, e->user.len, e->user.data);
 	if (e->flags & (1 << NFTNL_SET_ELEM_OBJREF))
 		mnl_attr_put_strz(nlh, NFTA_SET_ELEM_OBJREF, e->objref);
+
+	if (!list_empty(&e->expr_list)) {
+		list_for_each_entry(expr, &e->expr_list, head)
+			num_exprs++;
+
+		if (num_exprs == 1) {
+			struct nlattr *nest1;
+
+			nest1 = mnl_attr_nest_start(nlh, NFTA_SET_ELEM_EXPR);
+			list_for_each_entry(expr, &e->expr_list, head)
+				nftnl_expr_build_payload(nlh, expr);
+
+			mnl_attr_nest_end(nlh, nest1);
+		} else if (num_exprs > 1) {
+			struct nlattr *nest1, *nest2;
+
+			nest1 = mnl_attr_nest_start(nlh, NFTA_SET_ELEM_EXPRESSIONS);
+			list_for_each_entry(expr, &e->expr_list, head) {
+				nest2 = mnl_attr_nest_start(nlh, NFTA_LIST_ELEM);
+				nftnl_expr_build_payload(nlh, expr);
+				mnl_attr_nest_end(nlh, nest2);
+			}
+			mnl_attr_nest_end(nlh, nest1);
+		}
+	}
 }
 
 static void nftnl_set_elem_nlmsg_build_def(struct nlmsghdr *nlh,
@@ -339,6 +419,28 @@ void nftnl_set_elems_nlmsg_build_payload(struct nlmsghdr *nlh, struct nftnl_set 
 	mnl_attr_nest_end(nlh, nest1);
 }
 
+EXPORT_SYMBOL(nftnl_set_elem_add_expr);
+void nftnl_set_elem_add_expr(struct nftnl_set_elem *e, struct nftnl_expr *expr)
+{
+	list_add_tail(&expr->head, &e->expr_list);
+}
+
+EXPORT_SYMBOL(nftnl_set_elem_expr_foreach);
+int nftnl_set_elem_expr_foreach(struct nftnl_set_elem *e,
+				int (*cb)(struct nftnl_expr *e, void *data),
+				void *data)
+{
+       struct nftnl_expr *cur, *tmp;
+       int ret;
+
+	list_for_each_entry_safe(cur, tmp, &e->expr_list, head) {
+		ret = cb(cur, data);
+		if (ret < 0)
+			return ret;
+	}
+	return 0;
+}
+
 static int nftnl_set_elem_parse_attr_cb(const struct nlattr *attr, void *data)
 {
 	const struct nlattr **tb = data;
@@ -358,8 +460,10 @@ static int nftnl_set_elem_parse_attr_cb(const struct nlattr *attr, void *data)
 			abi_breakage();
 		break;
 	case NFTA_SET_ELEM_KEY:
+	case NFTA_SET_ELEM_KEY_END:
 	case NFTA_SET_ELEM_DATA:
 	case NFTA_SET_ELEM_EXPR:
+	case NFTA_SET_ELEM_EXPRESSIONS:
 		if (mnl_attr_validate(attr, MNL_TYPE_NESTED) < 0)
 			abi_breakage();
 		break;
@@ -406,6 +510,13 @@ static int nftnl_set_elems_parse2(struct nftnl_set *s, const struct nlattr *nest
 			goto out_set_elem;
 		e->flags |= (1 << NFTNL_SET_ELEM_KEY);
         }
+	if (tb[NFTA_SET_ELEM_KEY_END]) {
+		ret = nftnl_parse_data(&e->key_end, tb[NFTA_SET_ELEM_KEY_END],
+				       &type);
+		if (ret < 0)
+			goto out_set_elem;
+		e->flags |= (1 << NFTNL_SET_ELEM_KEY_END);
+	}
         if (tb[NFTA_SET_ELEM_DATA]) {
 		ret = nftnl_parse_data(&e->data, tb[NFTA_SET_ELEM_DATA], &type);
 		if (ret < 0)
@@ -424,12 +535,32 @@ static int nftnl_set_elems_parse2(struct nftnl_set *s, const struct nlattr *nest
 		}
         }
 	if (tb[NFTA_SET_ELEM_EXPR]) {
-		e->expr = nftnl_expr_parse(tb[NFTA_SET_ELEM_EXPR]);
-		if (e->expr == NULL) {
+		struct nftnl_expr *expr;
+
+		expr = nftnl_expr_parse(tb[NFTA_SET_ELEM_EXPR]);
+		if (expr == NULL) {
 			ret = -1;
 			goto out_set_elem;
 		}
+		list_add_tail(&expr->head, &e->expr_list);
 		e->flags |= (1 << NFTNL_SET_ELEM_EXPR);
+	} else if (tb[NFTA_SET_ELEM_EXPRESSIONS]) {
+		struct nftnl_expr *expr;
+		struct nlattr *attr;
+
+		mnl_attr_for_each_nested(attr, tb[NFTA_SET_ELEM_EXPRESSIONS]) {
+			if (mnl_attr_get_type(attr) != NFTA_LIST_ELEM) {
+				ret = -1;
+				goto out_set_elem;
+			}
+			expr = nftnl_expr_parse(attr);
+			if (expr == NULL) {
+				ret = -1;
+				goto out_set_elem;
+			}
+			list_add_tail(&expr->head, &e->expr_list);
+		}
+		e->flags |= (1 << NFTNL_SET_ELEM_EXPRESSIONS);
 	}
 	if (tb[NFTA_SET_ELEM_USERDATA]) {
 		const void *udata =
@@ -442,7 +573,7 @@ static int nftnl_set_elems_parse2(struct nftnl_set *s, const struct nlattr *nest
 		e->user.data = malloc(e->user.len);
 		if (e->user.data == NULL) {
 			ret = -1;
-			goto out_expr;
+			goto out_set_elem;
 		}
 		memcpy(e->user.data, udata, e->user.len);
 		e->flags |= (1 << NFTNL_RULE_USERDATA);
@@ -460,8 +591,6 @@ static int nftnl_set_elems_parse2(struct nftnl_set *s, const struct nlattr *nest
 	list_add_tail(&e->head, &s->element_list);
 
 	return 0;
-out_expr:
-	nftnl_expr_free(e->expr);
 out_set_elem:
 	nftnl_set_elem_free(e);
 	return ret;
@@ -577,18 +706,28 @@ static int nftnl_set_elem_snprintf_default(char *buf, size_t size,
 	ret = snprintf(buf, remain, "element ");
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
-	for (i = 0; i < div_round_up(e->key.len, sizeof(uint32_t)); i++) {
-		ret = snprintf(buf + offset, remain, "%.8x ", e->key.val[i]);
+	ret = nftnl_data_reg_snprintf(buf + offset, remain, &e->key,
+				      NFTNL_OUTPUT_DEFAULT,
+				      DATA_F_NOPFX, DATA_VALUE);
+	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+
+	if (e->flags & (1 << NFTNL_SET_ELEM_KEY_END)) {
+		ret = snprintf(buf + offset, remain, " - ");
+		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+
+		ret = nftnl_data_reg_snprintf(buf + offset, remain, &e->key_end,
+					      NFTNL_OUTPUT_DEFAULT,
+					      DATA_F_NOPFX, DATA_VALUE);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 	}
 
 	ret = snprintf(buf + offset, remain, " : ");
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
-	for (i = 0; i < div_round_up(e->data.len, sizeof(uint32_t)); i++) {
-		ret = snprintf(buf + offset, remain, "%.8x ", e->data.val[i]);
-		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
-	}
+	ret = nftnl_data_reg_snprintf(buf + offset, remain, &e->data,
+				      NFTNL_OUTPUT_DEFAULT,
+				      DATA_F_NOPFX, DATA_VALUE);
+	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	ret = snprintf(buf + offset, remain, "%u [end]", e->set_elem_flags);
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
@@ -654,7 +793,7 @@ static int nftnl_set_elem_do_snprintf(char *buf, size_t size, const void *e,
 }
 
 EXPORT_SYMBOL(nftnl_set_elem_fprintf);
-int nftnl_set_elem_fprintf(FILE *fp, struct nftnl_set_elem *se, uint32_t type,
+int nftnl_set_elem_fprintf(FILE *fp, const struct nftnl_set_elem *se, uint32_t type,
 			 uint32_t flags)
 {
 	return nftnl_fprintf(fp, se, NFTNL_CMD_UNSPEC, type, flags,

@@ -28,13 +28,14 @@ enum nftnl_rule_attr {
 	NFTNL_RULE_POSITION,
 	NFTNL_RULE_USERDATA,
 	NFTNL_RULE_ID,
+	NFTNL_RULE_POSITION_ID,
 	__NFTNL_RULE_MAX
 };
 #define NFTNL_RULE_MAX (__NFTNL_RULE_MAX - 1)
 
 void nftnl_rule_unset(struct nftnl_rule *r, uint16_t attr);
 bool nftnl_rule_is_set(const struct nftnl_rule *r, uint16_t attr);
-int nftnl_rule_set(struct nftnl_rule *r, uint16_t attr, const void *data);
+int nftnl_rule_set(struct nftnl_rule *r, uint16_t attr, const void *data) __attribute__((deprecated));
 int nftnl_rule_set_data(struct nftnl_rule *r, uint16_t attr,
 			const void *data, uint32_t data_len);
 void nftnl_rule_set_u32(struct nftnl_rule *r, uint16_t attr, uint32_t val);
@@ -50,6 +51,7 @@ uint32_t nftnl_rule_get_u32(const struct nftnl_rule *r, uint16_t attr);
 uint64_t nftnl_rule_get_u64(const struct nftnl_rule *r, uint16_t attr);
 
 void nftnl_rule_add_expr(struct nftnl_rule *r, struct nftnl_expr *expr);
+void nftnl_rule_del_expr(struct nftnl_expr *expr);
 
 struct nlmsghdr;
 

@@ -19,6 +19,7 @@ enum {
 	NFTNL_OBJ_FAMILY,
 	NFTNL_OBJ_USE,
 	NFTNL_OBJ_HANDLE,
+	NFTNL_OBJ_USERDATA,
 	NFTNL_OBJ_BASE		= 16,
 	__NFTNL_OBJ_MAX
 };
@@ -71,11 +72,25 @@ enum {
 };
 
 enum {
+	NFTNL_OBJ_CT_EXPECT_L3PROTO	= NFTNL_OBJ_BASE,
+	NFTNL_OBJ_CT_EXPECT_L4PROTO,
+	NFTNL_OBJ_CT_EXPECT_DPORT,
+	NFTNL_OBJ_CT_EXPECT_TIMEOUT,
+	NFTNL_OBJ_CT_EXPECT_SIZE,
+};
+
+enum {
 	NFTNL_OBJ_LIMIT_RATE	= NFTNL_OBJ_BASE,
 	NFTNL_OBJ_LIMIT_UNIT,
 	NFTNL_OBJ_LIMIT_BURST,
 	NFTNL_OBJ_LIMIT_TYPE,
 	NFTNL_OBJ_LIMIT_FLAGS,
+};
+
+enum {
+	NFTNL_OBJ_SYNPROXY_MSS	= NFTNL_OBJ_BASE,
+	NFTNL_OBJ_SYNPROXY_WSCALE,
+	NFTNL_OBJ_SYNPROXY_FLAGS,
 };
 
 enum {
@@ -110,7 +125,7 @@ bool nftnl_obj_is_set(const struct nftnl_obj *ne, uint16_t attr);
 void nftnl_obj_unset(struct nftnl_obj *ne, uint16_t attr);
 void nftnl_obj_set_data(struct nftnl_obj *ne, uint16_t attr, const void *data,
 			uint32_t data_len);
-void nftnl_obj_set(struct nftnl_obj *ne, uint16_t attr, const void *data);
+void nftnl_obj_set(struct nftnl_obj *ne, uint16_t attr, const void *data) __attribute__((deprecated));
 void nftnl_obj_set_u8(struct nftnl_obj *ne, uint16_t attr, uint8_t val);
 void nftnl_obj_set_u16(struct nftnl_obj *ne, uint16_t attr, uint16_t val);
 void nftnl_obj_set_u32(struct nftnl_obj *ne, uint16_t attr, uint32_t val);
@@ -153,7 +168,7 @@ struct nftnl_obj_list_iter *nftnl_obj_list_iter_create(struct nftnl_obj_list *l)
 struct nftnl_obj *nftnl_obj_list_iter_next(struct nftnl_obj_list_iter *iter);
 void nftnl_obj_list_iter_destroy(struct nftnl_obj_list_iter *iter);
 
-#ifdef __cplusplusg
+#ifdef __cplusplus
 } /* extern "C" */
 #endif
 

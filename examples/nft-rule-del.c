@@ -48,18 +48,20 @@ int main(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else if (strcmp(argv[1], "bridge") == 0)
 		family = NFPROTO_BRIDGE;
 	else if (strcmp(argv[1], "arp") == 0)
 		family = NFPROTO_ARP;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6, bridge, arp\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet, bridge, arp\n");
 		exit(EXIT_FAILURE);
 	}
 
 	seq = time(NULL);
-	nftnl_rule_set(r, NFTNL_RULE_TABLE, argv[2]);
-	nftnl_rule_set(r, NFTNL_RULE_CHAIN, argv[3]);
+	nftnl_rule_set_str(r, NFTNL_RULE_TABLE, argv[2]);
+	nftnl_rule_set_str(r, NFTNL_RULE_CHAIN, argv[3]);
 
 	/* If no handle is specified, delete all rules in the chain */
 	if (argc == 5)

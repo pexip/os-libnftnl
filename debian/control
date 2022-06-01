@@ -3,14 +3,15 @@ Priority: optional
 Maintainer: Pexip AS <packaging@pexip.com>
 XSBC-Pexip-Original-Maintainer: Debian Netfilter Packaging Team <pkg-netfilter-team@lists.alioth.debian.org>
 XSBC-Pexip-Original-Uploaders: Arturo Borrero Gonzalez <arturo@debian.org>
-Build-Depends: debhelper (>= 11),
+Build-Depends: debhelper-compat (= 13),
+               doxygen,
                libmnl-dev,
                libtool,
                pkg-config
-Standards-Version: 4.2.1
+Standards-Version: 4.5.1
 Section: libs
 Homepage: https://git.netfilter.org/libnftnl
-Vcs-Git: https://salsa.debian.org/pkg-netfilter-team/pkg-libnftnl
+Vcs-Git: https://salsa.debian.org/pkg-netfilter-team/pkg-libnftnl.git
 Vcs-Browser: https://salsa.debian.org/pkg-netfilter-team/pkg-libnftnl
 XS-Pexip-Upstream: http://deb.debian.org/debian/ bullseye
 
@@ -32,6 +33,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libnftnl11 (= ${binary:Version}), pkg-config, ${misc:Depends}
+Suggests: libnftnl-dev-doc
 Description: Development files for libnftnl
  libnftnl is the low-level library for Netfilter 4th generation
  framework nftables.
@@ -40,3 +42,19 @@ Description: Development files for libnftnl
  nftables Netlink's API over libmnl.
  .
  This package provides development files and static libraries.
+
+Package: libnftnl-dev-doc
+Section: doc
+Architecture: all
+Multi-Arch: foreign
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}
+Description: Doxygen-generated documentation for libnftnl-dev
+ libnftnl is the low-level library for Netfilter 4th generation
+ framework nftables.
+ .
+ Is the user-space library for low-level interaction with
+ nftables Netlink's API over libmnl.
+ .
+ This package provides additional doxygen-generated documentation for the
+ libnftnl-dev package.

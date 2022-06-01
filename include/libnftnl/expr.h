@@ -36,6 +36,14 @@ uint32_t nftnl_expr_get_u32(const struct nftnl_expr *expr, uint16_t type);
 uint64_t nftnl_expr_get_u64(const struct nftnl_expr *expr, uint16_t type);
 const char *nftnl_expr_get_str(const struct nftnl_expr *expr, uint16_t type);
 
+void nftnl_expr_build_payload(struct nlmsghdr *nlh, struct nftnl_expr *expr);
+
+/* For dynset expressions. */
+void nftnl_expr_add_expr(struct nftnl_expr *expr, uint32_t type, struct nftnl_expr *e);
+int nftnl_expr_expr_foreach(const struct nftnl_expr *e,
+			    int (*cb)(struct nftnl_expr *e, void *data),
+			    void *data);
+
 int nftnl_expr_snprintf(char *buf, size_t buflen, const struct nftnl_expr *expr, uint32_t type, uint32_t flags);
 int nftnl_expr_fprintf(FILE *fp, const struct nftnl_expr *expr, uint32_t type, uint32_t flags);
 
@@ -55,8 +63,8 @@ enum {
 	NFTNL_EXPR_NG_MODULUS,
 	NFTNL_EXPR_NG_TYPE,
 	NFTNL_EXPR_NG_OFFSET,
-	NFTNL_EXPR_NG_SET_NAME,
-	NFTNL_EXPR_NG_SET_ID,
+	NFTNL_EXPR_NG_SET_NAME,		/* deprecated */
+	NFTNL_EXPR_NG_SET_ID,		/* deprecated */
 };
 
 enum {
@@ -98,6 +106,7 @@ enum {
 	NFTNL_EXPR_IMM_DATA,
 	NFTNL_EXPR_IMM_VERDICT,
 	NFTNL_EXPR_IMM_CHAIN,
+	NFTNL_EXPR_IMM_CHAIN_ID,
 };
 
 enum {
@@ -116,6 +125,8 @@ enum {
 	NFTNL_EXPR_BITWISE_LEN,
 	NFTNL_EXPR_BITWISE_MASK,
 	NFTNL_EXPR_BITWISE_XOR,
+	NFTNL_EXPR_BITWISE_OP,
+	NFTNL_EXPR_BITWISE_DATA,
 };
 
 enum {
@@ -162,6 +173,8 @@ enum {
 	NFTNL_EXPR_DYNSET_SET_NAME,
 	NFTNL_EXPR_DYNSET_SET_ID,
 	NFTNL_EXPR_DYNSET_EXPR,
+	NFTNL_EXPR_DYNSET_EXPRESSIONS,
+	NFTNL_EXPR_DYNSET_FLAGS,
 };
 
 enum {
@@ -259,8 +272,8 @@ enum {
 	NFTNL_EXPR_HASH_SEED,
 	NFTNL_EXPR_HASH_OFFSET,
 	NFTNL_EXPR_HASH_TYPE,
-	NFTNL_EXPR_HASH_SET_NAME,
-	NFTNL_EXPR_HASH_SET_ID,
+	NFTNL_EXPR_HASH_SET_NAME,	/* deprecated */
+	NFTNL_EXPR_HASH_SET_ID,		/* deprecated */
 };
 
 enum {
@@ -280,6 +293,7 @@ enum {
 enum {
 	NFTNL_EXPR_OSF_DREG	= NFTNL_EXPR_BASE,
 	NFTNL_EXPR_OSF_TTL,
+	NFTNL_EXPR_OSF_FLAGS,
 };
 
 enum {
@@ -288,6 +302,12 @@ enum {
 	NFTNL_EXPR_XFRM_KEY,
 	NFTNL_EXPR_XFRM_DIR,
 	NFTNL_EXPR_XFRM_SPNUM,
+};
+
+enum {
+	NFTNL_EXPR_SYNPROXY_MSS	= NFTNL_EXPR_BASE,
+	NFTNL_EXPR_SYNPROXY_WSCALE,
+	NFTNL_EXPR_SYNPROXY_FLAGS,
 };
 
 #ifdef __cplusplus

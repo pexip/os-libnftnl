@@ -48,8 +48,8 @@ static struct nftnl_chain *chain_add_parse(int argc, char *argv[])
 		perror("OOM");
 		return NULL;
 	}
-	nftnl_chain_set(t, NFTNL_CHAIN_TABLE, argv[2]);
-	nftnl_chain_set(t, NFTNL_CHAIN_NAME, argv[3]);
+	nftnl_chain_set_str(t, NFTNL_CHAIN_TABLE, argv[2]);
+	nftnl_chain_set_str(t, NFTNL_CHAIN_NAME, argv[3]);
 	if (argc == 6) {
 		nftnl_chain_set_u32(t, NFTNL_CHAIN_HOOKNUM, hooknum);
 		nftnl_chain_set_u32(t, NFTNL_CHAIN_PRIO, atoi(argv[5]));
@@ -79,12 +79,14 @@ int main(int argc, char *argv[])
 		family = NFPROTO_IPV4;
 	else if (strcmp(argv[1], "ip6") == 0)
 		family = NFPROTO_IPV6;
+	else if (strcmp(argv[1], "inet") == 0)
+		family = NFPROTO_INET;
 	else if (strcmp(argv[1], "bridge") == 0)
 		family = NFPROTO_BRIDGE;
 	else if (strcmp(argv[1], "arp") == 0)
 		family = NFPROTO_ARP;
 	else {
-		fprintf(stderr, "Unknown family: ip, ip6, bridge, arp\n");
+		fprintf(stderr, "Unknown family: ip, ip6, inet, bridge, arp\n");
 		exit(EXIT_FAILURE);
 	}
 
