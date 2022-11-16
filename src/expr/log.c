@@ -186,11 +186,12 @@ nftnl_expr_log_parse(struct nftnl_expr *e, struct nlattr *attr)
 	return 0;
 }
 
-static int nftnl_expr_log_snprintf_default(char *buf, size_t size,
-					   const struct nftnl_expr *e)
+static int
+nftnl_expr_log_snprintf(char *buf, size_t remain,
+			uint32_t flags, const struct nftnl_expr *e)
 {
 	struct nftnl_expr_log *log = nftnl_expr_data(e);
-	int ret, offset = 0, remain = size;
+	int ret, offset = 0;
 
 	if (e->flags & (1 << NFTNL_EXPR_LOG_PREFIX)) {
 		ret = snprintf(buf, remain, "prefix %s ", log->prefix);
@@ -236,21 +237,6 @@ static int nftnl_expr_log_snprintf_default(char *buf, size_t size,
 	return offset;
 }
 
-static int
-nftnl_expr_log_snprintf(char *buf, size_t len, uint32_t type,
-			uint32_t flags, const struct nftnl_expr *e)
-{
-	switch(type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_log_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
-}
-
 static void nftnl_expr_log_free(const struct nftnl_expr *e)
 {
 	struct nftnl_expr_log *log = nftnl_expr_data(e);
@@ -267,5 +253,5 @@ struct expr_ops expr_ops_log = {
 	.get		= nftnl_expr_log_get,
 	.parse		= nftnl_expr_log_parse,
 	.build		= nftnl_expr_log_build,
-	.snprintf	= nftnl_expr_log_snprintf,
+	.output		= nftnl_expr_log_snprintf,
 };

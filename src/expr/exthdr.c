@@ -235,8 +235,9 @@ static inline int str2exthdr_type(const char *str)
 	return -1;
 }
 
-static int nftnl_expr_exthdr_snprintf_default(char *buf, size_t len,
-					      const struct nftnl_expr *e)
+static int
+nftnl_expr_exthdr_snprintf(char *buf, size_t len,
+			   uint32_t flags, const struct nftnl_expr *e)
 {
 	struct nftnl_expr_exthdr *exthdr = nftnl_expr_data(e);
 
@@ -246,26 +247,16 @@ static int nftnl_expr_exthdr_snprintf_default(char *buf, size_t len,
 				exthdr->offset,
 				exthdr->flags & NFT_EXTHDR_F_PRESENT ? " present" : "",
 				exthdr->dreg);
-	else
+	else if (e->flags & (1 << NFTNL_EXPR_EXTHDR_SREG))
 		return snprintf(buf, len, "write%s reg %u => %ub @ %u + %u ",
 				op2str(exthdr->op), exthdr->sreg, exthdr->len, exthdr->type,
 				exthdr->offset);
+	else if (exthdr->op == NFT_EXTHDR_OP_TCPOPT && exthdr->len == 0)
+		return snprintf(buf, len, "reset tcpopt %u ", exthdr->type);
+	else
+		return snprintf(buf, len, "op %u len %u type %u offset %u ",
+				exthdr->op, exthdr->len, exthdr->type, exthdr->offset);
 
-}
-
-static int
-nftnl_expr_exthdr_snprintf(char *buf, size_t len, uint32_t type,
-			   uint32_t flags, const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_exthdr_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
 }
 
 struct expr_ops expr_ops_exthdr = {
@@ -276,5 +267,5 @@ struct expr_ops expr_ops_exthdr = {
 	.get		= nftnl_expr_exthdr_get,
 	.parse		= nftnl_expr_exthdr_parse,
 	.build		= nftnl_expr_exthdr_build,
-	.snprintf	= nftnl_expr_exthdr_snprintf,
+	.output		= nftnl_expr_exthdr_snprintf,
 };

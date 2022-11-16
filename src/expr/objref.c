@@ -174,8 +174,9 @@ static int nftnl_expr_objref_parse(struct nftnl_expr *e, struct nlattr *attr)
 	return 0;
 }
 
-static int nftnl_expr_objref_snprintf_default(char *buf, size_t len,
-					      const struct nftnl_expr *e)
+static int nftnl_expr_objref_snprintf(char *buf, size_t len,
+				      uint32_t flags,
+				      const struct nftnl_expr *e)
 {
 	struct nftnl_expr_objref *objref = nftnl_expr_data(e);
 
@@ -195,21 +196,6 @@ static void nftnl_expr_objref_free(const struct nftnl_expr *e)
 	xfree(objref->set.name);
 }
 
-static int nftnl_expr_objref_snprintf(char *buf, size_t len, uint32_t type,
-				      uint32_t flags,
-				      const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_objref_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
-}
-
 struct expr_ops expr_ops_objref = {
 	.name		= "objref",
 	.alloc_len	= sizeof(struct nftnl_expr_objref),
@@ -219,5 +205,5 @@ struct expr_ops expr_ops_objref = {
 	.get		= nftnl_expr_objref_get,
 	.parse		= nftnl_expr_objref_parse,
 	.build		= nftnl_expr_objref_build,
-	.snprintf	= nftnl_expr_objref_snprintf,
+	.output		= nftnl_expr_objref_snprintf,
 };
