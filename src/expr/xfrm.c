@@ -171,40 +171,12 @@ static const char *xfrmdir2str(uint8_t dir)
 	return xfrmdir2str_array[dir];
 }
 
-#ifdef JSON_PARSING
-static uint32_t str2xfrmkey(const char *s)
-{
-	int i;
-
-	for (i = 0;
-	     i < sizeof(xfrmkey2str_array) / sizeof(xfrmkey2str_array[0]);
-	     i++) {
-		if (strcmp(xfrmkey2str_array[i], s) == 0)
-			return i;
-	}
-	return -1;
-}
-
-static int str2xfmrdir(const char *s)
-{
-	int i;
-
-	for (i = 0;
-	     i <  sizeof(xfrmdir2str_array) / sizeof(xfrmdir2str_array[0]);
-	     i++) {
-		if (strcmp(xfrmkey2str_array[i], s) == 0)
-			return i;
-	}
-	return -1;
-}
-#endif
-
 static int
-nftnl_expr_xfrm_snprintf_default(char *buf, size_t size,
-			       const struct nftnl_expr *e)
+nftnl_expr_xfrm_snprintf(char *buf, size_t remain,
+			 uint32_t flags, const struct nftnl_expr *e)
 {
 	struct nftnl_expr_xfrm *x = nftnl_expr_data(e);
-	int ret, remain = size, offset = 0;
+	int ret, offset = 0;
 
 	if (e->flags & (1 << NFTNL_EXPR_XFRM_DREG)) {
 		ret = snprintf(buf, remain, "load %s %u %s => reg %u ",
@@ -216,21 +188,6 @@ nftnl_expr_xfrm_snprintf_default(char *buf, size_t size,
 	return offset;
 }
 
-static int
-nftnl_expr_xfrm_snprintf(char *buf, size_t len, uint32_t type,
-			 uint32_t flags, const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_xfrm_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
-}
-
 struct expr_ops expr_ops_xfrm = {
 	.name		= "xfrm",
 	.alloc_len	= sizeof(struct nftnl_expr_xfrm),
@@ -239,5 +196,5 @@ struct expr_ops expr_ops_xfrm = {
 	.get		= nftnl_expr_xfrm_get,
 	.parse		= nftnl_expr_xfrm_parse,
 	.build		= nftnl_expr_xfrm_build,
-	.snprintf	= nftnl_expr_xfrm_snprintf,
+	.output		= nftnl_expr_xfrm_snprintf,
 };

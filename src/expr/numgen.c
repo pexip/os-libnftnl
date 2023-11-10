@@ -143,11 +143,11 @@ nftnl_expr_ng_parse(struct nftnl_expr *e, struct nlattr *attr)
 }
 
 static int
-nftnl_expr_ng_snprintf_default(char *buf, size_t size,
-			       const struct nftnl_expr *e)
+nftnl_expr_ng_snprintf(char *buf, size_t remain,
+		       uint32_t flags, const struct nftnl_expr *e)
 {
 	struct nftnl_expr_ng *ng = nftnl_expr_data(e);
-	int remain = size, offset = 0, ret;
+	int offset = 0, ret;
 
 	switch (ng->type) {
 	case NFT_NG_INCREMENTAL:
@@ -172,21 +172,6 @@ nftnl_expr_ng_snprintf_default(char *buf, size_t size,
 	return offset;
 }
 
-static int
-nftnl_expr_ng_snprintf(char *buf, size_t len, uint32_t type,
-		       uint32_t flags, const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_ng_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
-}
-
 struct expr_ops expr_ops_ng = {
 	.name		= "numgen",
 	.alloc_len	= sizeof(struct nftnl_expr_ng),
@@ -195,5 +180,5 @@ struct expr_ops expr_ops_ng = {
 	.get		= nftnl_expr_ng_get,
 	.parse		= nftnl_expr_ng_parse,
 	.build		= nftnl_expr_ng_build,
-	.snprintf	= nftnl_expr_ng_snprintf,
+	.output		= nftnl_expr_ng_snprintf,
 };

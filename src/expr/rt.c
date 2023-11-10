@@ -142,8 +142,8 @@ static inline int str2rt_key(const char *str)
 }
 
 static int
-nftnl_expr_rt_snprintf_default(char *buf, size_t len,
-			       const struct nftnl_expr *e)
+nftnl_expr_rt_snprintf(char *buf, size_t len,
+		       uint32_t flags, const struct nftnl_expr *e)
 {
 	struct nftnl_expr_rt *rt = nftnl_expr_data(e);
 
@@ -154,21 +154,6 @@ nftnl_expr_rt_snprintf_default(char *buf, size_t len,
 	return 0;
 }
 
-static int
-nftnl_expr_rt_snprintf(char *buf, size_t len, uint32_t type,
-		       uint32_t flags, const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_rt_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
-}
-
 struct expr_ops expr_ops_rt = {
 	.name		= "rt",
 	.alloc_len	= sizeof(struct nftnl_expr_rt),
@@ -177,5 +162,5 @@ struct expr_ops expr_ops_rt = {
 	.get		= nftnl_expr_rt_get,
 	.parse		= nftnl_expr_rt_parse,
 	.build		= nftnl_expr_rt_build,
-	.snprintf	= nftnl_expr_rt_snprintf,
+	.output		= nftnl_expr_rt_snprintf,
 };

@@ -1,3 +1,55 @@
+libnftnl (1.2.4-2) unstable; urgency=medium
+
+  * Rebuild and reupload of 1.2.4-1.
+  * I made a mistake uploading the previous version to the archive. The
+  original 1.2.4-1 that was uploaded was built over an not-up-to-date git tree.
+  The package was accepted into the archive before I could cancel the upload.
+  So, this rebuild and reupload should help the archive forget about the wrong
+  1.2.4-1. Sorry!
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Wed, 16 Nov 2022 10:19:20 +0100
+
+libnftnl (1.2.4-1) unstable; urgency=medium
+
+  * [c9c1293] New upstream version 1.2.4
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Tue, 15 Nov 2022 23:34:16 +0100
+
+libnftnl (1.2.3-1) unstable; urgency=medium
+
+  * [bf6ee0b] New upstream version 1.2.3
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Wed, 10 Aug 2022 13:17:04 +0200
+
+libnftnl (1.2.2-1) unstable; urgency=medium
+
+  * [5ccd111] New upstream version 1.2.2
+  * [04a8396] d/libnftnl11.symbols: refresh file
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Wed, 08 Jun 2022 00:31:12 +0200
+
+libnftnl (1.2.1-1) unstable; urgency=medium
+
+  * [b294714] New upstream version 1.2.1
+  * [eb32dfe] d/control: bump std-version to 4.6.0
+  * [5ec46cd] d/libnftnl11.symbols: refresh file
+  * [02e14b5] d/copyright: drop references to missing source files
+  * [9777cfe] d/copyright: refresh copyright date for debian/ dir
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Fri, 19 Nov 2021 14:52:25 +0100
+
+libnftnl (1.2.0-1) unstable; urgency=medium
+
+  * Rebuild from experimental to unstable.
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Sat, 04 Sep 2021 18:47:21 +0200
+
+libnftnl (1.2.0-1~exp1) experimental; urgency=medium
+
+  * [c6a494a] New upstream version 1.2.0
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Wed, 26 May 2021 12:08:17 +0200
+
 libnftnl (1.1.9-1pexip3) pexip-bullseye; urgency=medium
 
   * Bullseye rebuild for ARM64 inclusion

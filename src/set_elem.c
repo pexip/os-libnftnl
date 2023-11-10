@@ -300,6 +300,7 @@ err:
 	return NULL;
 }
 
+EXPORT_SYMBOL(nftnl_set_elem_nlmsg_build_payload);
 void nftnl_set_elem_nlmsg_build_payload(struct nlmsghdr *nlh,
 				      struct nftnl_set_elem *e)
 {
@@ -388,8 +389,9 @@ static void nftnl_set_elem_nlmsg_build_def(struct nlmsghdr *nlh,
 		mnl_attr_put_strz(nlh, NFTA_SET_ELEM_LIST_TABLE, s->table);
 }
 
-static struct nlattr *nftnl_set_elem_build(struct nlmsghdr *nlh,
-					      struct nftnl_set_elem *elem, int i)
+EXPORT_SYMBOL(nftnl_set_elem_nlmsg_build);
+struct nlattr *nftnl_set_elem_nlmsg_build(struct nlmsghdr *nlh,
+					  struct nftnl_set_elem *elem, int i)
 {
 	struct nlattr *nest2;
 
@@ -414,7 +416,7 @@ void nftnl_set_elems_nlmsg_build_payload(struct nlmsghdr *nlh, struct nftnl_set 
 
 	nest1 = mnl_attr_nest_start(nlh, NFTA_SET_ELEM_LIST_ELEMENTS);
 	list_for_each_entry(elem, &s->element_list, head)
-		nftnl_set_elem_build(nlh, elem, ++i);
+		nftnl_set_elem_nlmsg_build(nlh, elem, ++i);
 
 	mnl_attr_nest_end(nlh, nest1);
 }
@@ -698,16 +700,15 @@ int nftnl_set_elem_parse_file(struct nftnl_set_elem *e, enum nftnl_parse_type ty
 	return -1;
 }
 
-static int nftnl_set_elem_snprintf_default(char *buf, size_t size,
-					   const struct nftnl_set_elem *e)
+int nftnl_set_elem_snprintf_default(char *buf, size_t remain,
+				    const struct nftnl_set_elem *e)
 {
-	int ret, remain = size, offset = 0, i;
+	int ret, dregtype = DATA_VALUE, offset = 0, i;
 
 	ret = snprintf(buf, remain, "element ");
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	ret = nftnl_data_reg_snprintf(buf + offset, remain, &e->key,
-				      NFTNL_OUTPUT_DEFAULT,
 				      DATA_F_NOPFX, DATA_VALUE);
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
@@ -716,7 +717,6 @@ static int nftnl_set_elem_snprintf_default(char *buf, size_t size,
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 		ret = nftnl_data_reg_snprintf(buf + offset, remain, &e->key_end,
-					      NFTNL_OUTPUT_DEFAULT,
 					      DATA_F_NOPFX, DATA_VALUE);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 	}
@@ -724,51 +724,48 @@ static int nftnl_set_elem_snprintf_default(char *buf, size_t size,
 	ret = snprintf(buf + offset, remain, " : ");
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
+	if (e->flags & (1 << NFTNL_SET_ELEM_VERDICT))
+		dregtype = DATA_VERDICT;
+
 	ret = nftnl_data_reg_snprintf(buf + offset, remain, &e->data,
-				      NFTNL_OUTPUT_DEFAULT,
-				      DATA_F_NOPFX, DATA_VALUE);
+				      DATA_F_NOPFX, dregtype);
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	ret = snprintf(buf + offset, remain, "%u [end]", e->set_elem_flags);
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	if (e->user.len) {
-		ret = snprintf(buf + offset, remain, "  userdata = {");
+		ret = snprintf(buf + offset, remain, "  userdata = { ");
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 		for (i = 0; i < e->user.len; i++) {
 			char *c = e->user.data;
 
-			ret = snprintf(buf + offset, remain, "%c",
-				       isalnum(c[i]) ? c[i] : 0);
+			ret = snprintf(buf + offset, remain,
+				       isprint(c[i]) ? "%c" : "\\x%02hhx",
+				       c[i]);
 			SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 		}
 
-		ret = snprintf(buf + offset, remain, " }\n");
+		ret = snprintf(buf + offset, remain, " }");
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 	}
 
 	return offset;
 }
 
-static int nftnl_set_elem_cmd_snprintf(char *buf, size_t size,
+static int nftnl_set_elem_cmd_snprintf(char *buf, size_t remain,
 				       const struct nftnl_set_elem *e,
 				       uint32_t cmd, uint32_t type,
 				       uint32_t flags)
 {
-	int ret, remain = size, offset = 0;
+	int ret, offset = 0;
 
-	switch(type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		ret = nftnl_set_elem_snprintf_default(buf + offset, remain, e);
-		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
-		break;
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-		break;
-	default:
+	if (type != NFTNL_OUTPUT_DEFAULT)
 		return -1;
-	}
+
+	ret = nftnl_set_elem_snprintf_default(buf + offset, remain, e);
+	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	return offset;
 }
@@ -905,7 +902,7 @@ int nftnl_set_elems_nlmsg_build_payload_iter(struct nlmsghdr *nlh,
 	nest1 = mnl_attr_nest_start(nlh, NFTA_SET_ELEM_LIST_ELEMENTS);
 	elem = nftnl_set_elems_iter_next(iter);
 	while (elem != NULL) {
-		nest2 = nftnl_set_elem_build(nlh, elem, ++i);
+		nest2 = nftnl_set_elem_nlmsg_build(nlh, elem, ++i);
 		if (nftnl_attr_nest_overflow(nlh, nest1, nest2)) {
 			/* Go back to previous not to miss this element */
 			iter->cur = list_entry(iter->cur->head.prev,

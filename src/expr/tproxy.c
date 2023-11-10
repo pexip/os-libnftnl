@@ -135,11 +135,11 @@ nftnl_expr_tproxy_build(struct nlmsghdr *nlh, const struct nftnl_expr *e)
 }
 
 static int
-nftnl_expr_tproxy_snprintf_default(char *buf, size_t size,
-				const struct nftnl_expr *e)
+nftnl_expr_tproxy_snprintf(char *buf, size_t remain,
+			uint32_t flags, const struct nftnl_expr *e)
 {
 	struct nftnl_expr_tproxy *tproxy = nftnl_expr_data(e);
-	int remain = size, offset = 0, ret = 0;
+	int offset = 0, ret = 0;
 
 	if (tproxy->family != NFTA_TPROXY_UNSPEC) {
 		ret = snprintf(buf + offset, remain, "%s ",
@@ -162,19 +162,6 @@ nftnl_expr_tproxy_snprintf_default(char *buf, size_t size,
 	return offset;
 }
 
-static int
-nftnl_expr_tproxy_snprintf(char *buf, size_t size, uint32_t type,
-			uint32_t flags, const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_tproxy_snprintf_default(buf, size, e);
-	default:
-		break;
-	}
-	return -1;
-}
-
 struct expr_ops expr_ops_tproxy = {
 	.name		= "tproxy",
 	.alloc_len	= sizeof(struct nftnl_expr_tproxy),
@@ -183,5 +170,5 @@ struct expr_ops expr_ops_tproxy = {
 	.get		= nftnl_expr_tproxy_get,
 	.parse		= nftnl_expr_tproxy_parse,
 	.build		= nftnl_expr_tproxy_build,
-	.snprintf	= nftnl_expr_tproxy_snprintf,
+	.output		= nftnl_expr_tproxy_snprintf,
 };
