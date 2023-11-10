@@ -223,14 +223,14 @@ static inline int str2ctdir(const char *str, uint8_t *ctdir)
 }
 
 static int
-nftnl_expr_ct_snprintf_default(char *buf, size_t size,
-			       const struct nftnl_expr *e)
+nftnl_expr_ct_snprintf(char *buf, size_t remain,
+		       uint32_t flags, const struct nftnl_expr *e)
 {
-	int ret, remain = size, offset = 0;
 	struct nftnl_expr_ct *ct = nftnl_expr_data(e);
+	int ret, offset = 0;
 
 	if (e->flags & (1 << NFTNL_EXPR_CT_SREG)) {
-		ret = snprintf(buf, size, "set %s with reg %u ",
+		ret = snprintf(buf, remain, "set %s with reg %u ",
 				ctkey2str(ct->key), ct->sreg);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 	}
@@ -250,21 +250,6 @@ nftnl_expr_ct_snprintf_default(char *buf, size_t size,
 	return offset;
 }
 
-static int
-nftnl_expr_ct_snprintf(char *buf, size_t len, uint32_t type,
-		       uint32_t flags, const struct nftnl_expr *e)
-{
-	switch (type) {
-	case NFTNL_OUTPUT_DEFAULT:
-		return nftnl_expr_ct_snprintf_default(buf, len, e);
-	case NFTNL_OUTPUT_XML:
-	case NFTNL_OUTPUT_JSON:
-	default:
-		break;
-	}
-	return -1;
-}
-
 struct expr_ops expr_ops_ct = {
 	.name		= "ct",
 	.alloc_len	= sizeof(struct nftnl_expr_ct),
@@ -273,5 +258,5 @@ struct expr_ops expr_ops_ct = {
 	.get		= nftnl_expr_ct_get,
 	.parse		= nftnl_expr_ct_parse,
 	.build		= nftnl_expr_ct_build,
-	.snprintf	= nftnl_expr_ct_snprintf,
+	.output		= nftnl_expr_ct_snprintf,
 };

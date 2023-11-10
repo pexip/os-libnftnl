@@ -20,4 +20,7 @@ struct nftnl_set_elem {
 	} user;
 };
 
+int nftnl_set_elem_snprintf_default(char *buf, size_t size,
+				    const struct nftnl_set_elem *e);
+
 #endif
