@@ -115,21 +115,11 @@ int nftnl_rule_set_data(struct nftnl_rule *r, uint16_t attr,
 
 	switch(attr) {
 	case NFTNL_RULE_TABLE:
-		if (r->flags & (1 << NFTNL_RULE_TABLE))
-			xfree(r->table);
-
-		r->table = strdup(data);
-		if (!r->table)
-			return -1;
-		break;
+		return nftnl_set_str_attr(&r->table, &r->flags,
+					  attr, data, data_len);
 	case NFTNL_RULE_CHAIN:
-		if (r->flags & (1 << NFTNL_RULE_CHAIN))
-			xfree(r->chain);
-
-		r->chain = strdup(data);
-		if (!r->chain)
-			return -1;
-		break;
+		return nftnl_set_str_attr(&r->chain, &r->flags,
+					  attr, data, data_len);
 	case NFTNL_RULE_HANDLE:
 		memcpy(&r->handle, data, sizeof(r->handle));
 		break;
@@ -510,39 +500,22 @@ int nftnl_rule_nlmsg_parse(const struct nlmsghdr *nlh, struct nftnl_rule *r)
 	return 0;
 }
 
-static int nftnl_rule_do_parse(struct nftnl_rule *r, enum nftnl_parse_type type,
-			     const void *data, struct nftnl_parse_err *err,
-			     enum nftnl_parse_input input)
-{
-	int ret;
-	struct nftnl_parse_err perr = {};
-
-	switch (type) {
-	case NFTNL_PARSE_JSON:
-	case NFTNL_PARSE_XML:
-	default:
-		ret = -1;
-		errno = EOPNOTSUPP;
-		break;
-	}
-	if (err != NULL)
-		*err = perr;
-
-	return ret;
-}
-
 EXPORT_SYMBOL(nftnl_rule_parse);
 int nftnl_rule_parse(struct nftnl_rule *r, enum nftnl_parse_type type,
 		   const char *data, struct nftnl_parse_err *err)
 {
-	return nftnl_rule_do_parse(r, type, data, err, NFTNL_PARSE_BUFFER);
+	errno = EOPNOTSUPP;
+
+	return -1;
 }
 
 EXPORT_SYMBOL(nftnl_rule_parse_file);
 int nftnl_rule_parse_file(struct nftnl_rule *r, enum nftnl_parse_type type,
 			FILE *fp, struct nftnl_parse_err *err)
 {
-	return nftnl_rule_do_parse(r, type, fp, err, NFTNL_PARSE_FILE);
+	errno = EOPNOTSUPP;
+
+	return -1;
 }
 
 static int nftnl_rule_snprintf_default(char *buf, size_t remain,
@@ -600,23 +573,21 @@ static int nftnl_rule_snprintf_default(char *buf, size_t remain,
 		sep = " ";
 	}
 
-	ret = snprintf(buf + offset, remain, "\n");
-	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
-
 	list_for_each_entry(expr, &r->expr_list, head) {
-		ret = snprintf(buf + offset, remain, "  [ %s ", expr->ops->name);
+		ret = snprintf(buf + offset, remain,
+			       "\n  [ %s ", expr->ops->name);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 		ret = nftnl_expr_snprintf(buf + offset, remain, expr,
 					     type, flags);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
-		ret = snprintf(buf + offset, remain, "]\n");
+		ret = snprintf(buf + offset, remain, "]");
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 	}
 
 	if (r->user.len) {
-		ret = snprintf(buf + offset, remain, "  userdata = { ");
+		ret = snprintf(buf + offset, remain, "\n  userdata = { ");
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 		for (i = 0; i < r->user.len; i++) {
