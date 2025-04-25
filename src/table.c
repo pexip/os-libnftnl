@@ -74,6 +74,9 @@ void nftnl_table_unset(struct nftnl_table *t, uint16_t attr)
 	case NFTNL_TABLE_NAME:
 		xfree(t->name);
 		break;
+	case NFTNL_TABLE_USERDATA:
+		xfree(t->user.data);
+		break;
 	case NFTNL_TABLE_FLAGS:
 	case NFTNL_TABLE_HANDLE:
 	case NFTNL_TABLE_FAMILY:
@@ -88,6 +91,8 @@ static uint32_t nftnl_table_validate[NFTNL_TABLE_MAX + 1] = {
 	[NFTNL_TABLE_FLAGS]	= sizeof(uint32_t),
 	[NFTNL_TABLE_FAMILY]	= sizeof(uint32_t),
 	[NFTNL_TABLE_HANDLE]	= sizeof(uint64_t),
+	[NFTNL_TABLE_USE]	= sizeof(uint32_t),
+	[NFTNL_TABLE_OWNER]	= sizeof(uint32_t),
 };
 
 EXPORT_SYMBOL(nftnl_table_set_data);
@@ -99,13 +104,8 @@ int nftnl_table_set_data(struct nftnl_table *t, uint16_t attr,
 
 	switch (attr) {
 	case NFTNL_TABLE_NAME:
-		if (t->flags & (1 << NFTNL_TABLE_NAME))
-			xfree(t->name);
-
-		t->name = strdup(data);
-		if (!t->name)
-			return -1;
-		break;
+		return nftnl_set_str_attr(&t->name, &t->flags,
+					  attr, data, data_len);
 	case NFTNL_TABLE_HANDLE:
 		memcpy(&t->handle, data, sizeof(t->handle));
 		break;
@@ -327,36 +327,22 @@ int nftnl_table_nlmsg_parse(const struct nlmsghdr *nlh, struct nftnl_table *t)
 	return 0;
 }
 
-static int nftnl_table_do_parse(struct nftnl_table *t, enum nftnl_parse_type type,
-			      const void *data, struct nftnl_parse_err *err,
-			      enum nftnl_parse_input input)
-{
-	int ret;
-
-	switch (type) {
-	case NFTNL_PARSE_JSON:
-	case NFTNL_PARSE_XML:
-	default:
-		ret = -1;
-		errno = EOPNOTSUPP;
-		break;
-	}
-
-	return ret;
-}
-
 EXPORT_SYMBOL(nftnl_table_parse);
 int nftnl_table_parse(struct nftnl_table *t, enum nftnl_parse_type type,
 		    const char *data, struct nftnl_parse_err *err)
 {
-	return nftnl_table_do_parse(t, type, data, err, NFTNL_PARSE_BUFFER);
+	errno = EOPNOTSUPP;
+
+	return -1;
 }
 
 EXPORT_SYMBOL(nftnl_table_parse_file);
 int nftnl_table_parse_file(struct nftnl_table *t, enum nftnl_parse_type type,
 			 FILE *fp, struct nftnl_parse_err *err)
 {
-	return nftnl_table_do_parse(t, type, fp, err, NFTNL_PARSE_FILE);
+	errno = EOPNOTSUPP;
+
+	return -1;
 }
 
 static int nftnl_table_snprintf_default(char *buf, size_t size,

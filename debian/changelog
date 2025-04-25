@@ -1,3 +1,67 @@
+libnftnl (1.2.8-1) unstable; urgency=medium
+
+  * [93cd513] New upstream version 1.2.8
+    + Incorrect validation of dynset netlink attribute from the kernel.
+    + Don't append a newline when printing a rule.
+  * [a77ab88] d/control: bump Standards-Version to 4.7.0
+
+ -- Jeremy Sowden <azazel@debian.org>  Thu, 03 Oct 2024 11:05:13 +0100
+
+libnftnl (1.2.7-1) unstable; urgency=medium
+
+  * [e69ef93] New upstream version 1.2.7
+    + Avoid potential use-after-free when clearing set's expression list
+    + Avoid misc buffer overflows in attribute setters
+    + Implement nftnl_obj_unset symbol already exported in libnftnl.map
+    + Remove unimplemented symbols from libnftnl.map
+    + Drop some unused internal functions
+    + Validate per-expression and per-object attribute value and data length
+    + Enable some attribute validation where missing
+    + Fix synproxy object setter with unaligned data
+    + Fix for unsetting userdata attributes in table and chain objects
+  * [0a0b269] d/libnftnl11.symbols: add new symbol
+  * [2935833] d/control: replace pkg-config dependencies with pkgconf
+  * [a3d176c] d/control: update my e-mail address
+  * [aa1c95f] d/rules: add support for the `terse` build option
+
+ -- Jeremy Sowden <azazel@debian.org>  Mon, 15 Jul 2024 17:28:57 +0100
+
+libnftnl (1.2.6-2) unstable; urgency=medium
+
+  * [b8d5c66] d/rules: let dh manage build-flags
+  * [05d66dc] d/control, d/rules: build -doc package in `binary-indep` target
+    (Closes: #1043314)
+  * [965513d] d/control, d/rules: add `nodoc` build-profile support
+
+ -- Jeremy Sowden <jeremy@azazel.net>  Wed, 09 Aug 2023 16:09:58 +0100
+
+libnftnl (1.2.6-1) unstable; urgency=medium
+
+  [ Jeremy Sowden ]
+  * [8b89f0f] d/u/signing-key.asc: update and minmize key
+  * [e05bc06] d/control: add myself to uploaders.
+  * [790c140] d/control: bump Standards-Version to 4.6.2
+  * [649741b] d/control: set R³: no.
+  * [08096c1] d/control: use tracker.debian.org team address for `Maintainer:`
+  * [bcd604c] d/control: add b-dep on graphviz for building doc's
+  * [6937646] d/watch: use HTTPS URL
+  * [ebbe6f6] d/watch: bump to v4
+  * [998a1d8] d/libnftnl11.symbols: add `Build-Depends-Package:`
+  * [fa0046f] d/gbp.conf: DEFAULT: set `pristine-tar`
+  * [6908224] d/gbp.conf: dch: set `id-length`
+
+  [ Arturo Borrero Gonzalez ]
+  * [fe98300] New upstream version 1.2.6
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Thu, 13 Jul 2023 12:04:43 +0200
+
+libnftnl (1.2.5-1) unstable; urgency=medium
+
+  * d/watch: update tarball extension
+  * New upstream version 1.2.5
+
+ -- Arturo Borrero Gonzalez <arturo@debian.org>  Fri, 10 Mar 2023 12:34:05 +0100
+
 libnftnl (1.2.4-2+pexip24u3) pexip-bookworm; urgency=medium
 
   * New versioning scheme
