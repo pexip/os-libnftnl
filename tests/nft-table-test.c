@@ -34,7 +34,7 @@ static void cmp_nftnl_table(struct nftnl_table *a, struct nftnl_table *b)
 		print_err("table flags mismatches");
 	if (nftnl_table_get_u32(a, NFTNL_TABLE_FAMILY) !=
 	    nftnl_table_get_u32(b, NFTNL_TABLE_FAMILY))
-		print_err("tabke family mismatches");
+		print_err("table family mismatches");
 }
 
 int main(int argc, char *argv[])
@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
 	nftnl_table_set_u32(a, NFTNL_TABLE_FLAGS, 0);
 
 	/* cmd extracted from include/linux/netfilter/nf_tables.h */
-	nlh = nftnl_table_nlmsg_build_hdr(buf, NFT_MSG_NEWTABLE, AF_INET, 0,
-					1234);
+	nlh = nftnl_nlmsg_build_hdr(buf, NFT_MSG_NEWTABLE, AF_INET, 0, 1234);
 	nftnl_table_nlmsg_build_payload(nlh, a);
 
 	if (nftnl_table_nlmsg_parse(nlh, b) < 0)
